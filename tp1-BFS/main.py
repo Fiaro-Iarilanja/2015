@@ -20,22 +20,30 @@ for couple in G["A"]:
 def BFS(g,so):
     f=deque()
     pi = {node["value"]: None for node in g["S"]}
-
-    f.append(so["value"])
+    so_index=next((i for i, node in enumerate(nodes) if node["value"] == so), None)
+    f.append(so)
+    G["S"][so_index]["color"]="gris"
     while len(f)!=0:
         sk = f[0]
         sk_index = next((i for i, node in enumerate(nodes) if node["value"] == sk), None)
+        print("Node en cours: ",sk," = ",G["S"][sk_index]["color"])
+        print("Successeurs: ", succ[sk])
         for si in succ[sk]:
             si_index = next((i for i, node in enumerate(nodes) if node["value"] == si), None)
             if G["S"][si_index]["color"]=="blanc":
                 f.append(si)
+                print(si," = ",G["S"][si_index]["color"])
                 G["S"][si_index]["color"]="gris"
+                print(si," => ",G["S"][si_index]["color"])
                 pi[si]=G["S"][sk_index]["value"]
         f.popleft();
         G["S"][sk_index]["color"]="noir"
+        print(sk," => ",G["S"][sk_index]["color"])
+        print("============================================")
     return pi
 
-pi=BFS(G,nodes[0])
+pi=BFS(G,nodes[0]["value"])
+print("\n\nResultats (pi): ")
 
 for node in G["S"]:
-    print(node["value"]," : ",pi[node["value"]])
+    print(node["value"]," : ",pi[node["value"]], ", couleur: ", node["color"])
