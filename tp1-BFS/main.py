@@ -1,6 +1,18 @@
 from collections import deque
+from neo4j import GraphDatabase
 
 nodes=[]
+
+USERNAME="neo4j"
+PASSWORD="passwdBFS"
+URL="neo4j://127.0.0.1:7687"
+
+try:
+    driver = GraphDatabase.driver(URL,auth=(USERNAME,PASSWORD))
+    driver.verify_connectivity()
+    print("Connected")
+except Exception as e:
+    print("Error while connecting: ",e)
 
 #Initialisation des sommets
 for alpha in ['a','b','c','d','e','f','g','h','i']:
@@ -29,27 +41,27 @@ def BFS(g,so):
     #Recherche de l'index de so dans les sommets
     so_index=next((i for i, node in enumerate(nodes) if node["value"] == so), None)
     f.append(so)
-    G["S"][so_index]["color"]="gris"
+    g["S"][so_index]["color"]="gris"
     while len(f)!=0:
         sk = f[0]
         #Recherche de l'index de sk dans les sommets
         sk_index = next((i for i, node in enumerate(nodes) if node["value"] == sk), None)
-        print("Node en cours: ",sk," = ",G["S"][sk_index]["color"])
+        print("Node en cours: ",sk," = ",g["S"][sk_index]["color"])
         print("Successeurs: ", succ[sk])
         for si in succ[sk]:
             #Recherche de l'index de si dans les sommets
             si_index = next((i for i, node in enumerate(nodes) if node["value"] == si), None)
             #Verification du couleur de si
-            if G["S"][si_index]["color"]=="blanc":
+            if g["S"][si_index]["color"]=="blanc":
                 f.append(si)
-                print(si," = ",G["S"][si_index]["color"])
-                G["S"][si_index]["color"]="gris"
-                print(si," => ",G["S"][si_index]["color"])
-                pi[si]=G["S"][sk_index]["value"]
+                print(si," = ",g["S"][si_index]["color"])
+                g["S"][si_index]["color"]="gris"
+                print(si," => ",g["S"][si_index]["color"])
+                pi[si]=g["S"][sk_index]["value"]
         #Suppression de l'élément le plus vieux dans f
         f.popleft();
-        G["S"][sk_index]["color"]="noir"
-        print(sk," => ",G["S"][sk_index]["color"])
+        g["S"][sk_index]["color"]="noir"
+        print(sk," => ",g["S"][sk_index]["color"])
         print("============================================")
     return pi
 
@@ -58,3 +70,32 @@ print("\n\nResultats (pi): ")
 
 for node in G["S"]:
     print(node["value"]," : ",pi[node["value"]], ", couleur: ", node["color"])
+
+def create_node(tx,value):
+    tx.run(
+        f"MERGE (s:Node {{value:$sValue}})",sValue=value
+    )
+
+def create_relationship(tx,start,end):
+    tx.run(
+        f"MATCH (s:Node {{value:$sValue}})"
+        f"MERGE(s)-[:TO]->(e:Node {{value:$eValue}})" ,
+        sValue=start,
+        eValue=end
+    )
+
+def create_graph(g):
+    with driver.session(database="neo4j") as session:
+        session.run("MATCH (n) DETACH DELETE n")
+        for node in g["S"]:
+            session.execute_write(create_node,node["value"])
+            for successor in succ[node["value"]]:
+                session.execute_write(create_relationship,node["value"],successor)
+
+
+
+try:
+    create_graph(G)
+    print("Graphe créé")
+except Exception as e:
+    print("Creation du graphe échouée: ",e)
