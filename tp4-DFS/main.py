@@ -31,7 +31,9 @@ def DFS(g,so):
     g["S"][so_index]["color"]="gris"
     for sj in succ[so]:
         sj_index=next((i for i, node in enumerate(g["S"]) if node["value"] == sj), None)
-        if g["S"][sj_index]["color"]=="blanc":
+        if g["S"][sj_index]["color"]=="gris":
+            print(sj," circuit")
+        elif g["S"][sj_index]["color"]=="blanc":
             pi[sj]=so
             DFS(g,sj)
     g["S"][so_index]["color"]="noir"
