@@ -59,7 +59,7 @@ def BFS(g,so):
                 print(si," => ",g["S"][si_index]["color"])
                 pi[si]=g["S"][sk_index]["value"]
         #Suppression de l'élément le plus vieux dans f
-        f.popleft();
+        f.popleft()
         g["S"][sk_index]["color"]="noir"
         print(sk," => ",g["S"][sk_index]["color"])
         print("============================================")
