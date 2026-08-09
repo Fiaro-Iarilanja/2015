@@ -35,7 +35,7 @@ def calculDistance(g,so):
     d[so] = 0
     while len(f)!=0:
         sk=f[0]
-        sk_index = next((i for i, node in enumerate(nodes) if node["value"] == sk), None)
+        sk_index = next((i for i, node in enumerate(g["S"]) if node["value"] == sk), None)
         for si in succ[sk]:
             si_index = next((i for i, node in enumerate(nodes) if node["value"] == si), None)
             if g["S"][si_index]["color"]=="blanc":

@@ -39,18 +39,18 @@ def BFS(g,so):
     #Initialisation de pi
     pi = {node["value"]: None for node in g["S"]}
     #Recherche de l'index de so dans les sommets
-    so_index=next((i for i, node in enumerate(nodes) if node["value"] == so), None)
+    so_index=next((i for i, node in enumerate(g["S"]) if node["value"] == so), None)
     f.append(so)
     g["S"][so_index]["color"]="gris"
     while len(f)!=0:
         sk = f[0]
         #Recherche de l'index de sk dans les sommets
-        sk_index = next((i for i, node in enumerate(nodes) if node["value"] == sk), None)
+        sk_index = next((i for i, node in enumerate(g["S"]) if node["value"] == sk), None)
         print("Node en cours: ",sk," = ",g["S"][sk_index]["color"])
         print("Successeurs: ", succ[sk])
         for si in succ[sk]:
             #Recherche de l'index de si dans les sommets
-            si_index = next((i for i, node in enumerate(nodes) if node["value"] == si), None)
+            si_index = next((i for i, node in enumerate(g["S"]) if node["value"] == si), None)
             #Verification du couleur de si
             if g["S"][si_index]["color"]=="blanc":
                 f.append(si)
@@ -99,3 +99,5 @@ try:
     print("Graphe créé")
 except Exception as e:
     print("Creation du graphe échouée: ",e)
+
+driver.close()
