@@ -1,4 +1,17 @@
 from collections import deque
+from neo4j  import GraphDatabase
+
+USERNAME="neo4j"
+PASSWORD="passwdBFS"
+URL="neo4j://127.0.0.1:7687"
+
+try:
+    driver = GraphDatabase.driver(URL,auth=(USERNAME,PASSWORD))
+    driver.verify_connectivity()
+    print("Connected")
+except Exception as e:
+    print("Error while connecting: ",e)
+
 
 nodes=[]
 
@@ -55,3 +68,33 @@ d = calculDistance(G,'a')
 
 for node in G["S"]:
     print(node["value"],":",d[node["value"]])
+
+def create_node(tx,value):
+    tx.run(
+        f"MERGE (s:Node {{value:$sValue}})",sValue=value
+    )
+
+def create_relationship(tx,start,end):
+    tx.run(
+        f"MATCH (s:Node {{value:$sValue}})"
+        f"MERGE(s)-[:TO]->(e:Node {{value:$eValue}})" ,
+        sValue=start,
+        eValue=end
+    )
+
+def create_graph(g):
+    with driver.session(database="neo4j") as session:
+        session.run("MATCH (n) DETACH DELETE n")
+        for node in g["S"]:
+            session.execute_write(create_node,node["value"])
+            for successor in succ[node["value"]]:
+                session.execute_write(create_relationship,node["value"],successor)
+
+
+try:
+    create_graph(G)
+    print("Graphe créé")
+except Exception as e:
+    print("Creation du graphe échouée: ",e)
+
+driver.close()
