@@ -28,6 +28,12 @@ def relacher(arc, pi, d, cout):
         d[sj] = d[si] + cout[(si, sj)]
         pi[sj] = si
 
+    """
+    if d[sj] < d[si] * cout[(si,sj)]:
+        d[sj] = d[si] * cout[(si,sj)]
+        pi[sj]=si
+    """
+
 def encoreDuGris(g):
     Gris = {node["value"] for node in g["S"] if node["color"]=="gris"}
     return Gris if len(Gris)!=0 else None
