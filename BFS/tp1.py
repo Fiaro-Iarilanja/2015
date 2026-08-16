@@ -1,5 +1,8 @@
 from collections import deque
 from neo4j import GraphDatabase
+import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 nodes=[]
 
@@ -33,15 +36,19 @@ for couple in G["A"]:
     succ[couple[0]].append(couple[1]) # par exemple, pour ('a','b'): succ['a'].append('b')
 
 
+
+
 def BFS(g,so):
     #Création de la file f
     f=deque()
     #Initialisation de pi
     pi = {node["value"]: None for node in g["S"]}
+    history=[]
     #Recherche de l'index de so dans les sommets
     so_index=next((i for i, node in enumerate(g["S"]) if node["value"] == so), None)
     f.append(so)
     g["S"][so_index]["color"]="gris"
+    history.append({node["value"]:node["color"] for node in g["S"]})
     while len(f)!=0:
         sk = f[0]
         #Recherche de l'index de sk dans les sommets
@@ -58,18 +65,52 @@ def BFS(g,so):
                 g["S"][si_index]["color"]="gris"
                 print(si," => ",g["S"][si_index]["color"])
                 pi[si]=g["S"][sk_index]["value"]
+                history.append({node["value"]:node["color"] for node in g["S"]})
         #Suppression de l'élément le plus vieux dans f
         f.popleft()
         g["S"][sk_index]["color"]="noir"
+        history.append({node["value"]:node["color"] for node in g["S"]})
         print(sk," => ",g["S"][sk_index]["color"])
         print("============================================")
-    return pi
+    return pi,history
 
-pi=BFS(G,nodes[0]["value"])
+pi,history=BFS(G,nodes[0]["value"])
 print("\n\nResultats (pi): ")
 
 for node in G["S"]:
     print(node["value"]," : ",pi[node["value"]], ", couleur: ", node["color"])
+
+#Construction du graphe networkx à partir des mêmes sommets/arêtes
+G_nx = nx.DiGraph()
+G_nx.add_nodes_from([node["value"] for node in G["S"]])
+G_nx.add_edges_from(G["A"])
+ 
+#Layout fixe (seed) pour que les sommets ne bougent pas d'une frame à l'autre
+pos = nx.spring_layout(G_nx, seed=42)
+ 
+#Correspondance couleur "métier" -> couleur matplotlib
+color_map = {"blanc":"white", "gris":"#f4a261", "noir":"#264653"}
+ 
+fig, ax = plt.subplots(figsize=(7,6))
+ 
+def update(frame):
+    ax.clear()
+    snapshot = history[frame]
+    colors = [color_map[snapshot[n]] for n in G_nx.nodes()]
+    nx.draw(
+        G_nx, pos, ax=ax, with_labels=True,
+        node_color=colors, edgecolors="black", linewidths=1.5,
+        node_size=900, font_size=12, font_weight="bold",
+        arrows=True, arrowsize=15
+    )
+    ax.set_title(f"BFS - étape {frame+1}/{len(history)}")
+ 
+ani = animation.FuncAnimation(
+    fig, update, frames=len(history), interval=800, repeat=False
+)
+ 
+plt.show()
+
 
 def create_node(tx,value):
     tx.run(
@@ -91,7 +132,6 @@ def create_graph(g):
             session.execute_write(create_node,node["value"])
             for successor in succ[node["value"]]:
                 session.execute_write(create_relationship,node["value"],successor)
-
 
 
 try:
