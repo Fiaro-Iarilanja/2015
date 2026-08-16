@@ -1,3 +1,7 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 nodes=[]
 
 for alpha in ['a','b','c','d','e']:
@@ -33,6 +37,7 @@ def relacher(arc, pi, d, cout):
         d[sj] = d[si] * cout[(si,sj)]
         pi[sj]=si
     """
+    
 
 def encoreDuGris(g):
     Gris = {node["value"] for node in g["S"] if node["color"]=="gris"}
@@ -46,9 +51,10 @@ def Dijkstra(g,cout,so):
     pi={node["value"]:None for node in g["S"]}
     succ={node["value"]:{b for (a,b) in g["A"] if a==node["value"]} for node in g["S"]}
     d[so]=0
+    history=[]
     so_index = getIndex(g,so)
     g["S"][so_index]["color"]="gris"
-    
+    history.append({node["value"]:{"color":node["color"],"dist":d[node["value"]]} for node in g["S"]})
     while Gris:=encoreDuGris(g):
         si = min(Gris,key=lambda s:d[s])
         si_index=getIndex(g,si)
@@ -58,10 +64,52 @@ def Dijkstra(g,cout,so):
                 relacher((si,sj),pi,d,cout)
                 if g["S"][sj_index]["color"]=="blanc":
                     g["S"][sj_index]["color"]="gris"
+                history.append({node["value"]:{"color":node["color"],"dist":d[node["value"]]} for node in g["S"]})
         g["S"][si_index]["color"]="noir"
-    return pi,d
+        history.append({node["value"]:{"color":node["color"],"dist":d[node["value"]]} for node in g["S"]})
+    return pi,d,history
 
-pi, d=Dijkstra(G,cout,'a')
+pi, d,history=Dijkstra(G,cout,'a')
 
 for node in G["S"]:
     print(node["value"],":",pi[node["value"]],d[node["value"]])
+
+G_nx = nx.DiGraph()
+G_nx.add_nodes_from([node["value"] for node in G["S"]])
+G_nx.add_edges_from(G["A"])
+ 
+#Layout fixe (seed) pour que les sommets ne bougent pas d'une frame à l'autre
+pos = nx.spring_layout(G_nx, seed=7)
+ 
+#Correspondance couleur "métier" -> couleur matplotlib
+color_map = {"blanc":"white", "gris":"#f4a261", "noir":"#264653"}
+ 
+def format_label(v, dist):
+    #Affichage propre de l'infini
+    d_str = "inf" if dist == float('inf') else str(dist)
+    return f"{v} ({d_str})"
+ 
+fig, ax = plt.subplots(figsize=(7,6))
+ 
+def update(frame):
+    ax.clear()
+    snapshot = history[frame]
+    colors = [color_map[snapshot[n]["color"]] for n in G_nx.nodes()]
+    labels = {n: format_label(n, snapshot[n]["dist"]) for n in G_nx.nodes()}
+    nx.draw(
+        G_nx, pos, ax=ax, labels=labels,
+        node_color=colors, edgecolors="black", linewidths=1.5,
+        node_size=1600, font_size=9, font_weight="bold",
+        arrows=True, arrowsize=15
+    )
+    #Affichage des poids des arêtes
+    nx.draw_networkx_edge_labels(G_nx, pos, edge_labels=cout, ax=ax, font_size=9)
+    ax.set_title(f"Dijkstra - étape {frame+1}/{len(history)}")
+ 
+ani = animation.FuncAnimation(
+    fig, update, frames=len(history), interval=900, repeat=False
+)
+ 
+#Affichage interactif (nécessite un backend graphique, ex: python3-tk installé)
+plt.show()
+ 
