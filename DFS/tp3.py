@@ -73,10 +73,8 @@ G_nx = nx.DiGraph()
 G_nx.add_nodes_from([node["value"] for node in G["S"]])
 G_nx.add_edges_from(G["A"])
  
-#Layout fixe (seed) pour que les sommets ne bougent pas d'une frame à l'autre
 pos = nx.spring_layout(G_nx, seed=42)
  
-#Correspondance couleur "métier" -> couleur matplotlib
 color_map = {"blanc":"white", "gris":"#f4a261", "noir":"#264653"}
  
 fig, ax = plt.subplots(figsize=(7,6))
