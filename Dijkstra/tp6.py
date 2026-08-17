@@ -78,14 +78,11 @@ G_nx = nx.DiGraph()
 G_nx.add_nodes_from([node["value"] for node in G["S"]])
 G_nx.add_edges_from(G["A"])
  
-#Layout fixe (seed) pour que les sommets ne bougent pas d'une frame à l'autre
 pos = nx.spring_layout(G_nx, seed=7)
  
-#Correspondance couleur "métier" -> couleur matplotlib
 color_map = {"blanc":"white", "gris":"#f4a261", "noir":"#264653"}
  
 def format_label(v, dist):
-    #Affichage propre de l'infini
     d_str = "inf" if dist == float('inf') else str(dist)
     return f"{v} ({d_str})"
  
@@ -102,7 +99,6 @@ def update(frame):
         node_size=1600, font_size=9, font_weight="bold",
         arrows=True, arrowsize=15
     )
-    #Affichage des poids des arêtes
     nx.draw_networkx_edge_labels(G_nx, pos, edge_labels=cout, ax=ax, font_size=9)
     ax.set_title(f"Dijkstra - étape {frame+1}/{len(history)}")
  
@@ -110,6 +106,5 @@ ani = animation.FuncAnimation(
     fig, update, frames=len(history), interval=900, repeat=False
 )
  
-#Affichage interactif (nécessite un backend graphique, ex: python3-tk installé)
 plt.show()
  
