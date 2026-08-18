@@ -1,5 +1,6 @@
-from tp4 import DFSnum
-from tp4 import DFSrec
+import matplotlib.pyplot as plt
+import tp4
+from tp4 import DFSnum, DFSrec, animate
 
 nodes=[]
 
@@ -26,8 +27,11 @@ def sortNum(num):
 
 def SCC(g):
     scc = []
-    num=DFSnum(g)
+
+    tp4.steps.clear()
+    num = DFSnum(g)
     order = sortNum(num)
+    pass1_steps = list(tp4.steps)
 
     Gt = {
         "S": g["S"],
@@ -35,6 +39,9 @@ def SCC(g):
     }
     for node in Gt["S"]:
         node["color"] = "blanc"
+
+    tp4.steps.clear()
+    tp4.snapshot(Gt)
     for si in order:
         si_index = next(i for i, node in enumerate(Gt["S"]) if node["value"] == si)
         if Gt["S"][si_index]["color"] == "blanc":
@@ -42,12 +49,17 @@ def SCC(g):
             DFSrec(Gt, si)
             nouveau_noir = {node["value"] for node in Gt["S"] if node["color"] == "noir"}
             scc.append(Blanc & nouveau_noir)
+    pass2_steps = list(tp4.steps)
 
-    return scc
+    return scc, Gt, pass1_steps, pass2_steps
 
 print("SCC: ")
 
-scc=SCC(G)
+scc, Gt, pass1_steps, pass2_steps = SCC(G)
 
 for s in scc:
     print(s)
+
+fig1, ani1 = animate(G, pass1_steps, title="Passe 1 (numerotation)")
+fig2, ani2 = animate(Gt, pass2_steps, title="Passe 2 (graphe transpose)")
+plt.show()
